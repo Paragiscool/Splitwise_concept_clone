@@ -1,8 +1,10 @@
 # Splitwise Clone: Technical Design Document
 
-A production-grade, full-stack expense sharing application built to solve the complex mathematical and architectural challenges of group debt simplification. This project demonstrates advanced system design, strict financial integrity, and real-time bidirectional communication.
+## 🚀 Project Overview
 
-## 🚀 System Architecture
+This repository contains a production-grade, full-stack expense sharing application designed to solve the complex mathematical and architectural challenges of group debt simplification. The application is a fully functional Splitwise clone featuring a React frontend, a FastAPI backend, and a PostgreSQL database. It demonstrates advanced system design, strict financial integrity with integer-cents accuracy, and real-time bidirectional communication.
+
+## 🏗️ System Architecture Flowchart
 
 ```mermaid
 graph TD
@@ -26,27 +28,18 @@ graph TD
     ORM -- "Queries" --> DB
 ```
 
-### Architectural Highlights
-1. **Financial Precision (The "Penny Problem"):** Floating-point math causes decimal inaccuracies. The backend engine resolves this by converting all floating amounts into integer-cents before performing exact modulo math, gracefully distributing any remainder to ensure the ledger perfectly balances.
-2. **Greedy Graph Debt Simplification:** The system uses a two-pointer matching algorithm to dynamically collapse the debt graph, returning the absolute minimum number of cash transfers required to zero-out the entire group.
-3. **Transaction Safety:** All financial actions (creating an expense, calculating exact splits, updating the balance cache) are wrapped in strict ACID `db.commit()` and `db.rollback()` blocks.
-
----
-
 ## 🛠️ Evaluator Testing Guide
 
 To make grading and testing this assignment as frictionless as possible, a custom testing tool has been built directly into the UI.
 
-### The "Fast-Switch User" Tool
+### The "Fast-Switch User" God Mode
 Testing an expense-sharing app usually involves a tedious cycle of logging out and logging back in to see the app from different users' perspectives (e.g., *User A creates an expense -> log out -> log in as User B -> check dashboard -> pay User A*).
 
 **How to test rapidly:**
 Look at the global Navigation bar at the top of the screen. You will see a dropdown labeled **Profile: [Name]**. 
-You can click this dropdown from *any page* (even deep inside an expense detail view) to instantly masquerade as any user in the system. The page will immediately re-render to show that specific user's debts, permissions, and view. No passwords or logouts required!
+You can click this dropdown from *any page* (even deep inside an expense detail view) to instantly masquerade as any user in the system. The page will immediately re-render to show that specific user's debts, permissions, and view. No passwords or logouts required! This tool allows you to easily jump between user profiles to test group debt simplification without logging in and out.
 
----
-
-## 💻 Local Development Setup
+## 💻 Local Setup Instructions
 
 Follow these exact steps to run the application locally from scratch on a blank database.
 
@@ -66,10 +59,6 @@ pip install -r requirements.txt
 # Run Alembic migrations to build the empty database schema
 alembic upgrade head
 
-# (Optional) Seed the database with manual test data
-# Note: Evaluators should skip this to experience a fresh database
-python seed.py
-
 # Start the FastAPI Server on port 8000
 uvicorn main:app --reload
 ```
@@ -86,9 +75,4 @@ npm install
 npm run dev
 ```
 
-## 🌍 Production Deployment
-
-This application is fully compatible with serverless cloud infrastructure:
-1. **Database:** PostgreSQL hosted via Supabase.
-2. **Backend:** FastAPI Web Service hosted on Render.
-3. **Frontend:** React SPA hosted globally on Vercel.
+> **Note on Seeding Data:** The application does not automatically seed the database on startup. Evaluators will experience a completely fresh, empty database when they first load the app. If manual test data is desired, you can explicitly run `python seed.py` in the backend directory.

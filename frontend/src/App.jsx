@@ -5,7 +5,6 @@ import { fetchUsers } from './api';
 import DashboardScreen from './Dashboard';
 import GroupDetails from './GroupDetails';
 import ExpenseDetails from './ExpenseDetails';
-import RoutingSimulator from './RoutingSimulator';
 import './index.css';
 
 function LoginScreen() {
@@ -56,7 +55,6 @@ function Navigation() {
       <div className="nav-brand">Splitwise</div>
       <div className="nav-links">
         <Link to="/dashboard">Dashboard</Link>
-        <Link to="/simulator">Simulator</Link>
         <select 
           value={user.id} 
           onChange={(e) => {
@@ -83,7 +81,6 @@ function App() {
         <Routes>
           <Route path="/" element={<LoginScreen />} />
           <Route path="/dashboard" element={<DashboardScreen />} />
-          <Route path="/simulator" element={<RoutingSimulator />} />
           <Route path="/group/:id" element={<GroupDetails />} />
           <Route path="/expense/:id" element={<ExpenseDetails />} />
         </Routes>

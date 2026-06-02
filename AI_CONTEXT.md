@@ -92,7 +92,7 @@ For the initial 2-day sprint, we are using a local SQLite file (`splitwise.db`) 
 ## Changes made during implementation
 - **Debt Simplification Pivot:** Initially planned to just sum up debts naively, but built a full **Greedy Two-Pointer Algorithm** in `utils.py` to simplify debts (transitive reduction).
 - **Group Member Deletion Constraint:** Added strict business logic to block user removal if their balance is non-zero, returning a 400 error.
-- **UI Bug Fixes:** Fixed a bug where the UI fetched global users instead of specific group members. Added an "+ Invite" dropdown to dynamically invite external users into the group.
+- **UI Bug Fixes:** Fixed a bug where the UI fetched global users instead of specific group members. Added an "+ Invite" dropdown to dynamically invite external users into the group. Added strict `Array.isArray()` guard clauses and explicit `res.ok` checks across all major frontend components to gracefully prevent cascading React crashes when FastAPI returns error objects (e.g., 405 Method Not Allowed due to routing/trailing slash mismatches).
 - **WebSockets:** Upgraded from pure REST to hybrid WebSockets for real-time chat in the `ExpenseDetails` view.
 
 ## Known Limitations
