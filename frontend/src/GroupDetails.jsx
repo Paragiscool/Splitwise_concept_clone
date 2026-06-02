@@ -75,10 +75,15 @@ function GroupDetails() {
     };
 
     try {
-      await createExpense(id, payload);
+      const newExp = await createExpense(id, payload);
       setShowAddModal(false);
       setDesc('');
       setAmount('');
+      
+      // Optimistically update the UI to make it feel instant
+      setTransactions(prev => [{...newExp, type: 'expense'}, ...prev].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
+      
+      // Still load data in background to update debts
       loadData();
     } catch (err) {
       alert("Failed to add expense: " + err.message);
@@ -96,10 +101,15 @@ function GroupDetails() {
     };
 
     try {
-      await createSettlement(id, payload);
+      const newSett = await createSettlement(id, payload);
       setShowSettleModal(false);
       setSettlePayee('');
       setSettleAmount('');
+      
+      // Optimistically update the UI to make it feel instant and bypass the missing GET route
+      setTransactions(prev => [{...newSett, type: 'settlement'}, ...prev].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
+      
+      // Still load data in background to update debts
       loadData();
     } catch (err) {
       alert("Failed to settle up: " + err.message);
