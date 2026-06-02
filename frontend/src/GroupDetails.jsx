@@ -30,7 +30,7 @@ function GroupDetails() {
   }, [id]);
 
   const loadData = async () => {
-    fetchGroupDebts(id).then(setDebts);
+    fetchGroupDebts(id).then(setDebts).catch(() => setDebts([]));
     fetchGroupMembers(id).then(setMembers).catch(() => {
       // Fallback: If Render backend hasn't deployed the members endpoint yet,
       // fallback to showing all users so the app doesn't break
@@ -38,8 +38,8 @@ function GroupDetails() {
     });
     try {
       const [exp, sett] = await Promise.all([
-        fetchGroupExpenses(id),
-        fetchGroupSettlements(id)
+        fetchGroupExpenses(id).catch(() => []),
+        fetchGroupSettlements(id).catch(() => [])
       ]);
       const mappedExp = exp.map(e => ({ ...e, type: 'expense' }));
       const mappedSett = sett.map(s => ({ ...s, type: 'settlement' }));
