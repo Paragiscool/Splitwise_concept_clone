@@ -1,6 +1,13 @@
 from database import SessionLocal
 import models
 
+# -----------------------------------------------------------------------------
+# OPTIONAL MANUAL TESTING SCRIPT
+# This script is strictly for manually seeding a fresh database during local
+# development. It DOES NOT run automatically on server startup. Evaluators
+# will experience a completely blank, fresh database when they first load the app.
+# -----------------------------------------------------------------------------
+
 def seed_db():
     db = SessionLocal()
     users_to_seed = [

@@ -58,11 +58,11 @@ The development follows a strict 6-phase roadmap prioritizing foundational archi
 * **Frontend Protocol:** React fetches history on mount, establishes the WS connection, and appends incoming broadcast messages to the UI state array.
 
 ## Authentication & Frontend Routing
-* **Authentication Scope:** We are utilizing a "Dummy Auth" system (Option A) to maximize our 2-day timeline. Users will select their profile from a dropdown, and the `user_id` will be stored in `localStorage` to simulate a session.
+* **Authentication Scope:** We are utilizing a "Fast-Switch User" system (God Mode) to maximize our 2-day timeline and make evaluator testing frictionless. Users can select any profile from a global navigation dropdown, instantly masquerading as that user without logging out.
 * **Frontend Routing (React SPA):**
-  * `/` -> **Login Screen** (Dummy Auth selection)
+  * `/` -> **Login Screen** (Initial Profile selection)
   * `/dashboard` -> **Groups List** (User's active groups)
-  * `/group/:id` -> **Group Details** (Expense feed, group balances, and modals for Add Expense / Settle Up)
+  * `/group/:id` -> **Group Details** (Expense feed, group balances, specific group members list, + Invite Member UI, and modals for Add Expense / Settle Up)
   * `/expense/:id` -> **Expense Details & Chat** (Exact split breakdown and real-time WebSocket chat)
 
 ## Deployment Plan
@@ -79,7 +79,7 @@ The development follows a strict 6-phase roadmap prioritizing foundational archi
   - *Dirty Deletions:* Backend `DELETE /groups/{id}/members/{user_id}` route checks if the user has an active, non-zero `GroupBalance`. If so, deletion is blocked to prevent orphaned debts.
 
 ## Trade-offs
-- **Authentication (Mock Auth):** To meet the 2-day MVP requirement, we bypassed full JWT/OAuth flows. Instead, we use a dropdown "Mock Auth" where a user selects their profile and their `user_id` is stored in `localStorage`.
+- **Authentication (Mock Auth):** To meet the 2-day MVP requirement and reduce testing friction, we bypassed full JWT/OAuth flows. Instead, we built a "Fast-Switch User" global dropdown that allows instant switching between user profiles.
 - **Global User List:** Anyone can currently add anyone to a group. In a real app, there would be a friendship request system.
 - **Group-centric Expenses:** All expenses must be tied to a group. 1-on-1 expenses require creating a 2-person group. This vastly simplifies the schema.
 
@@ -90,7 +90,8 @@ The development follows a strict 6-phase roadmap prioritizing foundational archi
 
 ## Changes made during implementation
 - **Debt Simplification Pivot:** Initially planned to just sum up debts naively, but built a full **Greedy Two-Pointer Algorithm** in `utils.py` to simplify debts (transitive reduction).
-- **Group Member Deletion Constraint:** Added strict business logic to block user removal if their balance is non-zero.
+- **Group Member Deletion Constraint:** Added strict business logic to block user removal if their balance is non-zero, returning a 400 error.
+- **UI Bug Fixes:** Fixed a bug where the UI fetched global users instead of specific group members. Added an "+ Invite" dropdown to dynamically invite external users into the group.
 - **WebSockets:** Upgraded from pure REST to hybrid WebSockets for real-time chat in the `ExpenseDetails` view.
 
 ## Known Limitations

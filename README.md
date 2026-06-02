@@ -1,70 +1,94 @@
-# Splitwise Clone API & React Frontend
+# Splitwise Clone: Technical Design Document
 
-A production-grade, full-stack expense sharing application built during a 2-day sprint. This project demonstrates advanced architectural patterns, strict financial integrity, and real-time bidirectional communication.
+A production-grade, full-stack expense sharing application built to solve the complex mathematical and architectural challenges of group debt simplification. This project demonstrates advanced system design, strict financial integrity, and real-time bidirectional communication.
 
-## 🚀 Tech Stack
+## 🚀 System Architecture
 
-*   **Frontend:** React (Vite, SPA, State-driven UI)
-*   **Backend:** Python / FastAPI (Asynchronous REST API, WebSockets)
-*   **Database:** PostgreSQL / SQLite (Via SQLAlchemy ORM & Alembic)
+```mermaid
+graph TD
+    %% Define styles
+    classDef frontend fill:#3178c6,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef backend fill:#059669,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef db fill:#b91c1c,stroke:#fff,stroke-width:2px,color:#fff;
+    
+    %% Nodes
+    UI[React / Vite SPA]:::frontend
+    WS[WebSocket Connection]:::frontend
+    API[FastAPI REST Server]:::backend
+    ORM[SQLAlchemy ORM]:::backend
+    DB[(PostgreSQL / Supabase)]:::db
+    
+    %% Relationships
+    UI -- "HTTP Requests (JSON payload)" --> API
+    UI <== "Real-time Expense Chat" ==> WS
+    WS <== "Broadcasts" ==> API
+    API -- "Transactions & Rollbacks" --> ORM
+    ORM -- "Queries" --> DB
+```
 
-## 🏗️ Architectural Decisions & Tradeoffs
+### Architectural Highlights
+1. **Financial Precision (The "Penny Problem"):** Floating-point math causes decimal inaccuracies. The backend engine resolves this by converting all floating amounts into integer-cents before performing exact modulo math, gracefully distributing any remainder to ensure the ledger perfectly balances.
+2. **Greedy Graph Debt Simplification:** The system uses a two-pointer matching algorithm to dynamically collapse the debt graph, returning the absolute minimum number of cash transfers required to zero-out the entire group.
+3. **Transaction Safety:** All financial actions (creating an expense, calculating exact splits, updating the balance cache) are wrapped in strict ACID `db.commit()` and `db.rollback()` blocks.
 
-This project was built with a strict focus on enterprise-grade engineering principles over rapid prototyping shortcuts.
+---
 
-### 1. Financial Precision: The "Penny Problem"
-Floating-point mathematics in software inherently leads to decimal inaccuracies (e.g., `$10.00 / 3 = $3.333333...`). 
-*   **The Solution:** The backend calculation engine converts all incoming amounts into **integer cents** before any division occurs. 
-*   **The Array Fix:** Any remainder from division (the "extra pennies") is isolated via modulo operations and gracefully distributed to the first participants in the expense array, ensuring the ledger always balances perfectly to the exact cent.
+## 🛠️ Evaluator Testing Guide
 
-### 2. ACID Transactions & Ledger Cache
-Rather than dynamically summing thousands of individual expense splits every time a user views their dashboard, the application utilizes a **Balance Cache Table** (`group_balances`).
-*   **Transaction Safety:** When a new expense or cash settlement is posted, FastAPI uses strict SQLAlchemy `db.commit()` and `db.rollback()` transaction blocks. The system writes the raw expense, the individual splits, and updates the group cache table simultaneously. If any step fails, the entire transaction is rolled back, preventing orphaned data or financial corruption.
+To make grading and testing this assignment as frictionless as possible, a custom testing tool has been built directly into the UI.
 
-### 3. Debt Simplification (Greedy Matching Algorithm)
-If User A owes B $20, and B owes C $20, executing two cash transfers is highly inefficient. 
-*   **The Solution:** The backend extracts everyone's net balances into a directed graph and runs a greedy two-pointer matching algorithm. It pairs the largest debtors with the largest creditors, collapsing the debt graph and returning the absolute minimum number of cash transfers required to zero-out the entire group.
+### The "Fast-Switch User" Tool
+Testing an expense-sharing app usually involves a tedious cycle of logging out and logging back in to see the app from different users' perspectives (e.g., *User A creates an expense -> log out -> log in as User B -> check dashboard -> pay User A*).
 
-### 4. Hybrid Chat Architecture
-To support discussion on individual expenses, the application uses a hybrid approach:
-*   **REST (History):** On mount, React executes a `GET /expenses/{id}/chat` request to load historical messages from the database.
-*   **FastAPI WebSockets (Real-time):** React then establishes a persistent WebSocket connection to a `ConnectionManager` room. The backend saves new messages to the DB (ensuring persistence) and instantly broadcasts them down the open socket to all active clients, providing a live, typing-indicator-ready experience.
+**How to test rapidly:**
+Look at the global Navigation bar at the top of the screen. You will see a dropdown labeled **Profile: [Name]**. 
+You can click this dropdown from *any page* (even deep inside an expense detail view) to instantly masquerade as any user in the system. The page will immediately re-render to show that specific user's debts, permissions, and view. No passwords or logouts required!
 
 ---
 
 ## 💻 Local Development Setup
 
+Follow these exact steps to run the application locally from scratch on a blank database.
+
 ### 1. Backend Setup
 ```bash
+# Navigate to the backend directory
 cd backend
-python -m venv venv
-# Windows: .\venv\Scripts\Activate.ps1
-# Mac/Linux: source venv/bin/activate
 
+# Create and activate a virtual environment
+python -m venv venv
+# On Windows: .\venv\Scripts\Activate.ps1
+# On Mac/Linux: source venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
 
-# Run Alembic migrations to setup the SQLite DB
+# Run Alembic migrations to build the empty database schema
 alembic upgrade head
 
-# Seed the database with test users
+# (Optional) Seed the database with manual test data
+# Note: Evaluators should skip this to experience a fresh database
 python seed.py
 
-# Start the FastAPI Server
+# Start the FastAPI Server on port 8000
 uvicorn main:app --reload
 ```
 
 ### 2. Frontend Setup
 ```bash
+# Open a new terminal and navigate to the frontend directory
 cd frontend
+
+# Install dependencies
 npm install
+
 # Start the Vite React Server
 npm run dev
 ```
 
-## 🌍 Deployment Strategy (Free Tier)
+## 🌍 Production Deployment
 
-This application is designed to be easily deployed on zero-cost infrastructure:
-
-1.  **Database (Supabase / Neon):** Provision a free serverless PostgreSQL database. Take the connection string and paste it into the backend's `DATABASE_URL` environment variable. SQLAlchemy will automatically adapt from SQLite to Postgres.
-2.  **Backend (Render):** Deploy the FastAPI `backend/` folder as a Web Service.
-3.  **Frontend (Vercel):** Connect your GitHub repository to Vercel, set the Root Directory to `frontend/`, and add the `VITE_API_URL` pointing to your deployed Render URL.
+This application is fully compatible with serverless cloud infrastructure:
+1. **Database:** PostgreSQL hosted via Supabase.
+2. **Backend:** FastAPI Web Service hosted on Render.
+3. **Frontend:** React SPA hosted globally on Vercel.
