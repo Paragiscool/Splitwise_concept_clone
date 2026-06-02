@@ -55,6 +55,16 @@ class SettlementCreate(BaseModel):
     payee_id: int
     amount: float = Field(..., gt=0)
 
+class SettlementResponse(BaseModel):
+    id: int
+    group_id: int
+    payer_id: int
+    payee_id: int
+    amount: float
+    created_at: datetime
+    class Config:
+        from_attributes = True
+
 class DebtInstruction(BaseModel):
     payer: int
     payee: int

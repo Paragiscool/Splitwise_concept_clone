@@ -1,10 +1,9 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from './AuthContext';
-import { fetchUsers } from './api';
+import { fetchUsers, API_URL } from './api';
 
-const WS_URL = "ws://localhost:8000";
-const API_URL = "http://localhost:8000";
+const WS_URL = API_URL.replace(/^http/, 'ws');
 
 function ExpenseDetails() {
   const { id } = useParams();

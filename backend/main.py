@@ -252,6 +252,11 @@ def get_group_debts(group_id: int, db: Session = Depends(get_db)):
     transactions = utils.simplify_debts(balance_dict)
     return transactions
 
+@app.get("/groups/{group_id}/settlements", response_model=List[schemas.SettlementResponse])
+def get_group_settlements(group_id: int, db: Session = Depends(get_db)):
+    settlements = db.query(models.Settlement).filter(models.Settlement.group_id == group_id).order_by(models.Settlement.created_at.desc()).all()
+    return settlements
+
 @app.get("/expenses/{expense_id}/chat", response_model=List[schemas.ChatMessageResponse])
 def get_chat_history(expense_id: int, db: Session = Depends(get_db)):
     messages = db.query(models.ChatMessage).filter(models.ChatMessage.expense_id == expense_id).order_by(models.ChatMessage.created_at.asc()).all()

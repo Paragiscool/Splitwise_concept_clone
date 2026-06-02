@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export const fetchUsers = async () => {
   const res = await fetch(`${API_URL}/users`);
@@ -50,6 +50,11 @@ export const createSettlement = async (groupId, payload) => {
 
 export const fetchGroupDebts = async (groupId) => {
   const res = await fetch(`${API_URL}/groups/${groupId}/debts`);
+  return res.json();
+};
+
+export const fetchGroupSettlements = async (groupId) => {
+  const res = await fetch(`${API_URL}/groups/${groupId}/settlements`);
   return res.json();
 };
 

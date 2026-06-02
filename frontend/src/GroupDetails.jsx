@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from './AuthContext';
-import { fetchGroupExpenses, createExpense, fetchUsers, fetchGroupDebts, createSettlement, removeGroupMember, fetchGroupMembers, addGroupMember } from './api';
+import { fetchGroupExpenses, createExpense, fetchUsers, fetchGroupDebts, createSettlement, removeGroupMember, fetchGroupMembers, addGroupMember, fetchGroupSettlements } from './api';
 
 function GroupDetails() {
   const { id } = useParams();
   const { user } = useAuth();
-  const [expenses, setExpenses] = useState([]);
+  const [transactions, setTransactions] = useState([]);
   const [users, setUsers] = useState([]);
   const [members, setMembers] = useState([]);
   const [debts, setDebts] = useState([]);
@@ -29,10 +29,21 @@ function GroupDetails() {
     fetchUsers().then(setUsers);
   }, [id]);
 
-  const loadData = () => {
-    fetchGroupExpenses(id).then(setExpenses);
+  const loadData = async () => {
     fetchGroupDebts(id).then(setDebts);
     fetchGroupMembers(id).then(setMembers);
+    try {
+      const [exp, sett] = await Promise.all([
+        fetchGroupExpenses(id),
+        fetchGroupSettlements(id)
+      ]);
+      const mappedExp = exp.map(e => ({ ...e, type: 'expense' }));
+      const mappedSett = sett.map(s => ({ ...s, type: 'settlement' }));
+      const combined = [...mappedExp, ...mappedSett].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      setTransactions(combined);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const getUserName = (uid) => {
@@ -215,20 +226,39 @@ function GroupDetails() {
           </div>
         )}
 
-        <h3>Recent Expenses</h3>
-        {expenses.length === 0 && <p className="empty-state">No expenses yet. Add one to get started!</p>}
-        {expenses.map(exp => (
-          <Link to={`/expense/${exp.id}`} key={exp.id} className="group-card" style={{display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', textDecoration: 'none', color: 'inherit'}}>
-            <div>
-              <h4 style={{margin: '0 0 0.5rem 0'}}>{exp.description}</h4>
-              <div className="group-date">{new Date(exp.created_at).toLocaleString()}</div>
-            </div>
-            <div style={{textAlign: 'right'}}>
-              <div style={{fontWeight: 'bold', color: 'var(--primary)', fontSize: '1.2rem'}}>${exp.amount.toFixed(2)}</div>
-              <div className="group-date">Paid by {exp.payer_id === user.id ? 'You' : getUserName(exp.payer_id)}</div>
-            </div>
-          </Link>
-        ))}
+        <h3>Transaction History</h3>
+        {transactions.length === 0 && <p className="empty-state">No transactions yet. Add an expense to get started!</p>}
+        {transactions.map(t => {
+          if (t.type === 'expense') {
+            return (
+              <Link to={`/expense/${t.id}`} key={`exp-${t.id}`} className="group-card" style={{display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', textDecoration: 'none', color: 'inherit'}}>
+                <div>
+                  <h4 style={{margin: '0 0 0.5rem 0'}}>{t.description}</h4>
+                  <div className="group-date">{new Date(t.created_at).toLocaleString()}</div>
+                </div>
+                <div style={{textAlign: 'right'}}>
+                  <div style={{fontWeight: 'bold', color: 'var(--primary)', fontSize: '1.2rem'}}>${t.amount.toFixed(2)}</div>
+                  <div className="group-date">Paid by {t.payer_id === user.id ? 'You' : getUserName(t.payer_id)}</div>
+                </div>
+              </Link>
+            );
+          } else {
+            return (
+              <div key={`set-${t.id}`} className="group-card" style={{display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', borderColor: '#1cc29f', borderStyle: 'dashed'}}>
+                <div>
+                  <h4 style={{margin: '0 0 0.5rem 0', color: '#1cc29f'}}>Settlement</h4>
+                  <div className="group-date">{new Date(t.created_at).toLocaleString()}</div>
+                </div>
+                <div style={{textAlign: 'right'}}>
+                  <div style={{fontWeight: 'bold', color: '#1cc29f', fontSize: '1.2rem'}}>${t.amount.toFixed(2)}</div>
+                  <div className="group-date">
+                    {t.payer_id === user.id ? 'You' : getUserName(t.payer_id)} paid {t.payee_id === user.id ? 'You' : getUserName(t.payee_id)}
+                  </div>
+                </div>
+              </div>
+            );
+          }
+        })}
       </div>
     </div>
   );
