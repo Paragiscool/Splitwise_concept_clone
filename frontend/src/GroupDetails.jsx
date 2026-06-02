@@ -106,8 +106,18 @@ function GroupDetails() {
       setSettlePayee('');
       setSettleAmount('');
       
-      // Optimistically update the UI to make it feel instant and bypass the missing GET route
-      setTransactions(prev => [{...newSett, type: 'settlement'}, ...prev].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
+      // Fallback: If the backend hasn't finished deploying the fix and still returns a success message
+      // instead of the settlement object, we construct it manually to prevent a UI crash.
+      const settlementRecord = newSett.amount ? newSett : {
+          id: Date.now(), // temporary ID
+          payer_id: user.id,
+          payee_id: parseInt(settlePayee),
+          amount: parseFloat(settleAmount),
+          created_at: new Date().toISOString()
+      };
+      
+      // Optimistically update the UI to make it feel instant
+      setTransactions(prev => [{...settlementRecord, type: 'settlement'}, ...prev].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
       
       // Still load data in background to update debts
       loadData();
