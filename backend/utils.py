@@ -8,6 +8,8 @@ def calculate_splits(total_amount: float, users: list, strategy: str, percentage
     
     if strategy == "equal":
         num_users = len(users)
+        if num_users == 0:
+            raise ValueError("Group has no members to split with.")
         base_cent_split = total_cents // num_users
         remainder = total_cents % num_users
         

@@ -31,7 +31,11 @@ function GroupDetails() {
 
   const loadData = async () => {
     fetchGroupDebts(id).then(setDebts);
-    fetchGroupMembers(id).then(setMembers);
+    fetchGroupMembers(id).then(setMembers).catch(() => {
+      // Fallback: If Render backend hasn't deployed the members endpoint yet,
+      // fallback to showing all users so the app doesn't break
+      fetchUsers().then(setMembers);
+    });
     try {
       const [exp, sett] = await Promise.all([
         fetchGroupExpenses(id),
@@ -54,6 +58,11 @@ function GroupDetails() {
   const handleAddExpense = async (e) => {
     e.preventDefault();
     if (!desc || !amount) return;
+
+    if (members.length === 0) {
+      alert("Wait a moment for members to load, or refresh the page.");
+      return;
+    }
 
     const participantIds = members.map(m => m.id);
     
