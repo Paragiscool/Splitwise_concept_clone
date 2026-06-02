@@ -66,20 +66,34 @@ The development follows a strict 6-phase roadmap prioritizing foundational archi
   * `/expense/:id` -> **Expense Details & Chat** (Exact split breakdown and real-time WebSocket chat)
 
 ## Deployment Plan
-(Pending)
+- **Database:** Supabase (Serverless PostgreSQL). We rely on Supabase to host our relational database. The connection string is provided via environment variables.
+- **Backend:** Render (Web Service). The FastAPI backend is deployed on Render, utilizing Gunicorn with Uvicorn workers for asynchronous capability and WebSocket support.
+- **Frontend:** Vercel. The Vite/React application is deployed as a static site on Vercel. The `VITE_API_URL` environment variable points to the Render backend URL.
 
 ## Testing Plan
-(Pending)
+- **Edge Cases Tested & Validated:**
+  - *Mathematical Precision:* Handled integer cent conversion and modulo remainders correctly in `utils.py` to prevent "penny leaks".
+  - *Negative/Zero Boundaries:* Pydantic schemas enforce `Field(gt=0)` to reject invalid expense and settlement amounts (returns 422).
+  - *Self-Settlements:* Backend rejects settlements where `payer_id == payee_id` (returns 400).
+  - *Over-Settlements:* Backend computes simplified debts dynamically at runtime and blocks users from settling an amount greater than what they owe (returns 400).
+  - *Dirty Deletions:* Backend `DELETE /groups/{id}/members/{user_id}` route checks if the user has an active, non-zero `GroupBalance`. If so, deletion is blocked to prevent orphaned debts.
 
 ## Trade-offs
-(Pending)
+- **Authentication (Mock Auth):** To meet the 2-day MVP requirement, we bypassed full JWT/OAuth flows. Instead, we use a dropdown "Mock Auth" where a user selects their profile and their `user_id` is stored in `localStorage`.
+- **Global User List:** Anyone can currently add anyone to a group. In a real app, there would be a friendship request system.
+- **Group-centric Expenses:** All expenses must be tied to a group. 1-on-1 expenses require creating a 2-person group. This vastly simplifies the schema.
 
 ## Prompts and AI Responses
-- **Initial Discussion**: AI requested to act as a junior engineer and start the interview process. User provided a 6-step roadmap and suggested tech stack options.
-- **Tech Stack & DB Design**: User confirmed React, FastAPI, and PostgreSQL. User outlined a 5-table schema to handle the many-to-many relationship of expenses and participants. AI updated the context and asked the user to finalize the balance calculation strategy.
+- **Initial Discussion**: AI acted as a junior engineer and started the interview process. User provided a 6-step roadmap and suggested tech stack options.
+- **Tech Stack & DB Design**: Confirmed React, FastAPI, and PostgreSQL. Decided on a 7-table schema to handle the many-to-many relationship of expenses and participants.
+- **Edge Case Optimization Prompt**: User asked to fix mathematical edge cases (penny rounding), graph cycles, and malicious input (self-settlements/over-settlements). AI updated schemas, added strict validations in `main.py`, and verified them with an integration test script.
 
 ## Changes made during implementation
-- N/A (Planning phase)
+- **Debt Simplification Pivot:** Initially planned to just sum up debts naively, but built a full **Greedy Two-Pointer Algorithm** in `utils.py` to simplify debts (transitive reduction).
+- **Group Member Deletion Constraint:** Added strict business logic to block user removal if their balance is non-zero.
+- **WebSockets:** Upgraded from pure REST to hybrid WebSockets for real-time chat in the `ExpenseDetails` view.
 
 ## Known Limitations
-- N/A (Planning phase)
+- No multi-currency support.
+- No receipt scanning or OCR.
+- Mock authentication means no real security against impersonation in this MVP state.

@@ -43,7 +43,7 @@ class ExpenseResponse(BaseModel):
 
 class ExpenseCreate(BaseModel):
     description: str
-    amount: float
+    amount: float = Field(..., gt=0)
     payer_id: int
     strategy: str # "equal", "percentage", "custom"
     participants: List[int]
@@ -53,7 +53,7 @@ class ExpenseCreate(BaseModel):
 class SettlementCreate(BaseModel):
     payer_id: int
     payee_id: int
-    amount: float
+    amount: float = Field(..., gt=0)
 
 class DebtInstruction(BaseModel):
     payer: int

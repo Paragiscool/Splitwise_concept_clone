@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from './AuthContext';
-import { fetchGroupExpenses, createExpense, fetchUsers, fetchGroupDebts, createSettlement } from './api';
+import { fetchGroupExpenses, createExpense, fetchUsers, fetchGroupDebts, createSettlement, removeGroupMember } from './api';
 
 function GroupDetails() {
   const { id } = useParams();
@@ -82,6 +82,22 @@ function GroupDetails() {
     }
   };
 
+  const handleRemoveMember = async (userId) => {
+    if (userId === user.id) {
+      alert("You cannot remove yourself from the group.");
+      return;
+    }
+    if (!window.confirm("Are you sure you want to remove this user?")) return;
+    try {
+      await removeGroupMember(id, userId);
+      alert("Member removed successfully.");
+      // Just re-fetch users or data if necessary, though our users list is currently the global user list, 
+      // not specifically group members. In a real app we'd fetch group members.
+    } catch (err) {
+      alert("Failed to remove member: " + err.message);
+    }
+  };
+
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
@@ -150,6 +166,18 @@ function GroupDetails() {
       )}
 
       <div className="expense-feed">
+        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem'}}>
+          <h3 style={{margin: 0}}>Group Members</h3>
+        </div>
+        <div className="group-card" style={{marginBottom: '2rem'}}>
+          {users.map(u => (
+            <div key={u.id} style={{display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #333'}}>
+              <span>{u.name}</span>
+              <button onClick={() => handleRemoveMember(u.id)} style={{background: 'none', border: 'none', color: '#ff5555', cursor: 'pointer', fontSize: '0.9rem'}}>Remove</button>
+            </div>
+          ))}
+        </div>
+
         <h3>Recent Expenses</h3>
         {expenses.length === 0 && <p className="empty-state">No expenses yet. Add one to get started!</p>}
         {expenses.map(exp => (

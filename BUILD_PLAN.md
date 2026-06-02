@@ -28,8 +28,8 @@
 ## 4. Tradeoffs
 - **What I simplified:** Authentication is reduced to a "Dummy Auth" dropdown. We assume all expenses happen within groups.
 - **What I hardcoded:** Seed users for the dummy login.
-- **What I avoided:** Complex debt simplification algorithms (minimizing transactions), multi-currency support, receipt scanning.
-- **What I would improve with more time:** Full JWT email/password authentication, push notifications, and advanced graph-based debt simplification.
+- **What I avoided:** Full JWT email/password authentication (used dummy auth instead), multi-currency support, receipt scanning.
+- **What I would improve with more time:** Full OAuth/JWT auth, push notifications, and a dedicated mobile application wrapper.
 
 ---
 

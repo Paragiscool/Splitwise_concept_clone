@@ -52,3 +52,13 @@ export const fetchGroupDebts = async (groupId) => {
   const res = await fetch(`${API_URL}/groups/${groupId}/debts`);
   return res.json();
 };
+
+export const removeGroupMember = async (groupId, userId) => {
+  const res = await fetch(`${API_URL}/groups/${groupId}/members/${userId}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    throw new Error(await res.text());
+  }
+  return res.json();
+};

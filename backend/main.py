@@ -76,6 +76,34 @@ def add_group_member(group_id: int, member: schemas.GroupMemberCreate, db: Sessi
     db.commit()
     return {"message": "Member added successfully"}
 
+@app.delete("/groups/{group_id}/members/{user_id}")
+def remove_group_member(group_id: int, user_id: int, db: Session = Depends(get_db)):
+    membership = db.query(models.GroupMember).filter(
+        models.GroupMember.group_id == group_id, 
+        models.GroupMember.user_id == user_id
+    ).first()
+    if not membership:
+        raise HTTPException(status_code=404, detail="User not found in group")
+        
+    # Check if user has an active balance
+    balance_record = db.query(models.GroupBalance).filter(
+        models.GroupBalance.group_id == group_id,
+        models.GroupBalance.user_id == user_id
+    ).first()
+    
+    if balance_record and abs(balance_record.balance) > 0.01:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Cannot remove user. User has an active balance of ${balance_record.balance:.2f}."
+        )
+        
+    db.delete(membership)
+    if balance_record:
+        db.delete(balance_record)
+        
+    db.commit()
+    return {"message": "Member removed successfully"}
+
 @app.get("/users/{user_id}/groups", response_model=List[schemas.GroupResponseWithBalance])
 def get_user_groups(user_id: int, db: Session = Depends(get_db)):
     memberships = db.query(models.GroupMember).filter(models.GroupMember.user_id == user_id).all()
@@ -164,6 +192,22 @@ def get_group_expenses(group_id: int, db: Session = Depends(get_db)):
 
 @app.post("/groups/{group_id}/settlements")
 def create_settlement(group_id: int, settlement: schemas.SettlementCreate, db: Session = Depends(get_db)):
+    if settlement.payer_id == settlement.payee_id:
+        raise HTTPException(status_code=400, detail="Cannot settle with yourself")
+        
+    balances = db.query(models.GroupBalance).filter(models.GroupBalance.group_id == group_id).all()
+    balance_dict = {b.user_id: b.balance for b in balances}
+    transactions = utils.simplify_debts(balance_dict)
+    
+    actual_debt = 0.0
+    for t in transactions:
+        if t["payer"] == settlement.payer_id and t["payee"] == settlement.payee_id:
+            actual_debt = t["amount"]
+            break
+            
+    if settlement.amount > actual_debt + 0.01:
+        raise HTTPException(status_code=400, detail=f"Over-settlement: You only owe ${actual_debt:.2f} to this user based on simplified debts.")
+        
     db_settlement = models.Settlement(
         group_id=group_id,
         payer_id=settlement.payer_id,
