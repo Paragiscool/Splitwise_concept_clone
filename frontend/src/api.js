@@ -62,3 +62,23 @@ export const removeGroupMember = async (groupId, userId) => {
   }
   return res.json();
 };
+
+export const fetchGroupMembers = async (groupId) => {
+  const res = await fetch(`${API_URL}/groups/${groupId}/members`);
+  if (!res.ok) {
+    throw new Error(await res.text());
+  }
+  return res.json();
+};
+
+export const addGroupMember = async (groupId, userId) => {
+  const res = await fetch(`${API_URL}/groups/${groupId}/members`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_id: userId }),
+  });
+  if (!res.ok) {
+    throw new Error(await res.text());
+  }
+  return res.json();
+};

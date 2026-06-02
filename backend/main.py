@@ -104,6 +104,14 @@ def remove_group_member(group_id: int, user_id: int, db: Session = Depends(get_d
     db.commit()
     return {"message": "Member removed successfully"}
 
+@app.get("/groups/{group_id}/members", response_model=List[schemas.UserResponse])
+def get_group_members(group_id: int, db: Session = Depends(get_db)):
+    memberships = db.query(models.GroupMember).filter(models.GroupMember.group_id == group_id).all()
+    # Eager loading isn't strictly necessary for a small loop, but we can just query users
+    user_ids = [m.user_id for m in memberships]
+    users = db.query(models.User).filter(models.User.id.in_(user_ids)).all()
+    return users
+
 @app.get("/users/{user_id}/groups", response_model=List[schemas.GroupResponseWithBalance])
 def get_user_groups(user_id: int, db: Session = Depends(get_db)):
     memberships = db.query(models.GroupMember).filter(models.GroupMember.user_id == user_id).all()

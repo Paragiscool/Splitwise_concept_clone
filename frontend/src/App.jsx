@@ -40,9 +40,14 @@ function LoginScreen() {
 
 
 function Navigation() {
-  const { user, logout } = useAuth();
+  const { user, login, logout } = useAuth();
   const navigate = useNavigate();
+  const [globalUsers, setGlobalUsers] = useState([]);
   
+  useEffect(() => {
+    fetchUsers().then(setGlobalUsers);
+  }, []);
+
   if (!user) return null;
 
   return (
@@ -50,7 +55,18 @@ function Navigation() {
       <div className="nav-brand">Splitwise</div>
       <div className="nav-links">
         <Link to="/dashboard">Dashboard</Link>
-        <span className="user-badge">{user.name}</span>
+        <select 
+          value={user.id} 
+          onChange={(e) => {
+            const newUser = globalUsers.find(u => u.id === parseInt(e.target.value));
+            if (newUser) login(newUser);
+          }}
+          style={{padding: '0.25rem', borderRadius: '4px', border: '1px solid #ddd'}}
+        >
+          {globalUsers.map(u => (
+            <option key={u.id} value={u.id}>God Mode: Logged in as {u.name}</option>
+          ))}
+        </select>
         <button onClick={() => { logout(); navigate('/'); }} className="logout-btn">Logout</button>
       </div>
     </nav>

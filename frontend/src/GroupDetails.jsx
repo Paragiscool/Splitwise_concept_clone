@@ -1,16 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from './AuthContext';
-import { fetchGroupExpenses, createExpense, fetchUsers, fetchGroupDebts, createSettlement, removeGroupMember } from './api';
+import { fetchGroupExpenses, createExpense, fetchUsers, fetchGroupDebts, createSettlement, removeGroupMember, fetchGroupMembers, addGroupMember } from './api';
 
 function GroupDetails() {
   const { id } = useParams();
   const { user } = useAuth();
   const [expenses, setExpenses] = useState([]);
   const [users, setUsers] = useState([]);
+  const [members, setMembers] = useState([]);
   const [debts, setDebts] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showSettleModal, setShowSettleModal] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteUserId, setInviteUserId] = useState('');
   
   // Expense Form State
   const [desc, setDesc] = useState('');
@@ -29,6 +32,7 @@ function GroupDetails() {
   const loadData = () => {
     fetchGroupExpenses(id).then(setExpenses);
     fetchGroupDebts(id).then(setDebts);
+    fetchGroupMembers(id).then(setMembers);
   };
 
   const getUserName = (uid) => {
@@ -40,7 +44,7 @@ function GroupDetails() {
     e.preventDefault();
     if (!desc || !amount) return;
 
-    const participantIds = users.map(u => u.id);
+    const participantIds = members.map(m => m.id);
     
     const payload = {
       description: desc,
@@ -91,10 +95,22 @@ function GroupDetails() {
     try {
       await removeGroupMember(id, userId);
       alert("Member removed successfully.");
-      // Just re-fetch users or data if necessary, though our users list is currently the global user list, 
-      // not specifically group members. In a real app we'd fetch group members.
+      loadData();
     } catch (err) {
       alert("Failed to remove member: " + err.message);
+    }
+  };
+
+  const handleInviteMember = async (e) => {
+    e.preventDefault();
+    if (!inviteUserId) return;
+    try {
+      await addGroupMember(id, inviteUserId);
+      setShowInviteModal(false);
+      setInviteUserId('');
+      loadData();
+    } catch (err) {
+      alert("Failed to invite member: " + err.message);
     }
   };
 
@@ -151,8 +167,8 @@ function GroupDetails() {
             <form onSubmit={handleSettleUp} className="expense-form">
               <select value={settlePayee} onChange={e => setSettlePayee(e.target.value)} required>
                 <option value="">Select who you are paying...</option>
-                {users.filter(u => u.id !== user.id).map(u => (
-                  <option key={u.id} value={u.id}>{u.name}</option>
+                {members.filter(m => m.id !== user.id).map(m => (
+                  <option key={m.id} value={m.id}>{m.name}</option>
                 ))}
               </select>
               <input type="number" step="0.01" placeholder="Amount ($)" value={settleAmount} onChange={e => setSettleAmount(e.target.value)} required />
@@ -168,15 +184,36 @@ function GroupDetails() {
       <div className="expense-feed">
         <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem'}}>
           <h3 style={{margin: 0}}>Group Members</h3>
+          <button onClick={() => setShowInviteModal(true)} style={{background: 'var(--primary)', color: 'white', padding: '0.25rem 0.75rem', borderRadius: '4px', border: 'none', cursor: 'pointer'}}>+ Invite</button>
         </div>
         <div className="group-card" style={{marginBottom: '2rem'}}>
-          {users.map(u => (
-            <div key={u.id} style={{display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #333'}}>
-              <span>{u.name}</span>
-              <button onClick={() => handleRemoveMember(u.id)} style={{background: 'none', border: 'none', color: '#ff5555', cursor: 'pointer', fontSize: '0.9rem'}}>Remove</button>
+          {members.map(m => (
+            <div key={m.id} style={{display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #333'}}>
+              <span>{m.name}</span>
+              <button onClick={() => handleRemoveMember(m.id)} style={{background: 'none', border: 'none', color: '#ff5555', cursor: 'pointer', fontSize: '0.9rem'}}>Remove</button>
             </div>
           ))}
         </div>
+
+        {showInviteModal && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <h3 style={{marginTop: 0, color: 'var(--primary)'}}>Invite Member</h3>
+              <form onSubmit={handleInviteMember} className="expense-form">
+                <select value={inviteUserId} onChange={e => setInviteUserId(e.target.value)} required>
+                  <option value="">Select user to invite...</option>
+                  {users.filter(u => !members.find(m => m.id === u.id)).map(u => (
+                    <option key={u.id} value={u.id}>{u.name}</option>
+                  ))}
+                </select>
+                <div style={{display: 'flex', gap: '1rem', marginTop: '1rem'}}>
+                  <button type="submit" style={{background: 'var(--primary)', color: 'white', padding: '0.75rem 1.5rem', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 'bold'}}>Add Member</button>
+                  <button type="button" onClick={() => setShowInviteModal(false)} className="logout-btn">Cancel</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         <h3>Recent Expenses</h3>
         {expenses.length === 0 && <p className="empty-state">No expenses yet. Add one to get started!</p>}
