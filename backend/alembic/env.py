@@ -18,6 +18,9 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 import os
 import sys
+from dotenv import load_dotenv
+
+load_dotenv()
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from models import Base
 target_metadata = Base.metadata
@@ -59,6 +62,12 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
+    database_url = os.getenv("DATABASE_URL")
+    if database_url:
+        if database_url.startswith("postgres://"):
+            database_url = database_url.replace("postgres://", "postgresql://", 1)
+        config.set_main_option("sqlalchemy.url", database_url)
+
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
