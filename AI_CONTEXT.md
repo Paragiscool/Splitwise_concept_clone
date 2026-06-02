@@ -47,9 +47,10 @@ The development follows a strict 6-phase roadmap prioritizing foundational archi
   * `POST /groups/{id}/expenses/`, `GET /groups/{id}/expenses/`
   * `POST /groups/{id}/settlements/`
 
-2. **Database Provisioning**: For the initial 2-day sprint, we are using a local SQLite file (`splitwise.db`) for rapid iteration and zero-configuration setup. For Phase 6 (Deployment), we will provision a free serverless PostgreSQL database via **Supabase** and inject its connection string into SQLAlchemy via environment variables.
+## Database Provisioning
+For the initial 2-day sprint, we are using a local SQLite file (`splitwise.db`) for rapid iteration and zero-configuration setup. For Phase 6 (Deployment), we will provision a free serverless PostgreSQL database via **Supabase** and inject its connection string into SQLAlchemy via environment variables.
 
-## 7. Real-Time Chat Engine (Phase 5)
+## Real-Time Chat Engine (Phase 5)
 * **Architecture:** Hybrid approach using both REST and WebSockets.
 * **Database Updates:** Added `chat_messages` table to persist all conversation history tied to specific `expense_id`s.
 * **Backend Protocol:** 
