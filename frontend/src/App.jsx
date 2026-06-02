@@ -28,7 +28,7 @@ function LoginScreen() {
         <h1>Welcome to Splitwise</h1>
         <p>Select your profile to continue</p>
         <div className="user-list">
-          {users.map(u => (
+          {Array.isArray(users) && users.map(u => (
             <button key={u.id} onClick={() => handleLogin(u)} className="user-btn">
               Log in as {u.name}
             </button>
@@ -65,7 +65,7 @@ function Navigation() {
           }}
           style={{padding: '0.25rem', borderRadius: '4px', border: '1px solid #ddd'}}
         >
-          {globalUsers.map(u => (
+          {Array.isArray(globalUsers) && globalUsers.map(u => (
             <option key={u.id} value={u.id}>Profile: {u.name}</option>
           ))}
         </select>

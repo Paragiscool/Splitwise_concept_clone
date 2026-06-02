@@ -44,7 +44,7 @@ function DashboardScreen() {
       </div>
 
       <div className="groups-grid">
-        {groups.map(g => {
+        {Array.isArray(groups) && groups.map(g => {
           const bal = g.net_balance || 0;
           const isOwed = bal > 0;
           const isOwing = bal < 0;

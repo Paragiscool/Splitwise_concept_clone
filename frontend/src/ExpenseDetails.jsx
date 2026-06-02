@@ -19,7 +19,10 @@ function ExpenseDetails() {
     
     // Fetch History
     fetch(`${API_URL}/expenses/${id}/chat`)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to load history");
+        return res.json();
+      })
       .then(data => setMessages(data))
       .catch(err => console.error("Failed to load history", err));
 
@@ -72,7 +75,7 @@ function ExpenseDetails() {
       <div className="group-card" style={{height: '60vh', display: 'flex', flexDirection: 'column'}}>
         <div style={{flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem'}}>
           {messages.length === 0 && <p className="empty-state">No messages yet. Start the conversation!</p>}
-          {messages.map(m => {
+          {Array.isArray(messages) && messages.map(m => {
             const isMe = m.user_id === user.id;
             return (
               <div key={m.id} style={{alignSelf: isMe ? 'flex-end' : 'flex-start', maxWidth: '70%'}}>
