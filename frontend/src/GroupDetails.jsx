@@ -168,7 +168,7 @@ function GroupDetails() {
         </div>
       </div>
 
-      {debts.length > 0 && (
+      {Array.isArray(debts) && debts.length > 0 && (
         <div className="group-card" style={{marginBottom: '2rem', borderColor: 'var(--primary)'}}>
           <h3 style={{color: 'var(--primary)'}}>Suggested Repayments</h3>
           {debts.map((d, i) => (
@@ -207,7 +207,7 @@ function GroupDetails() {
             <form onSubmit={handleSettleUp} className="expense-form">
               <select value={settlePayee} onChange={e => setSettlePayee(e.target.value)} required>
                 <option value="">Select who you are paying...</option>
-                {members.filter(m => m.id !== user.id).map(m => (
+                {Array.isArray(members) && members.filter(m => m.id !== user.id).map(m => (
                   <option key={m.id} value={m.id}>{m.name}</option>
                 ))}
               </select>
@@ -227,7 +227,7 @@ function GroupDetails() {
           <button onClick={() => setShowInviteModal(true)} style={{background: 'var(--primary)', color: 'white', padding: '0.25rem 0.75rem', borderRadius: '4px', border: 'none', cursor: 'pointer'}}>+ Invite</button>
         </div>
         <div className="group-card" style={{marginBottom: '2rem'}}>
-          {members.map(m => (
+          {Array.isArray(members) && members.map(m => (
             <div key={m.id} style={{display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #333'}}>
               <span>{m.name}</span>
               <button onClick={() => handleRemoveMember(m.id)} style={{background: 'none', border: 'none', color: '#ff5555', cursor: 'pointer', fontSize: '0.9rem'}}>Remove</button>
@@ -242,7 +242,7 @@ function GroupDetails() {
               <form onSubmit={handleInviteMember} className="expense-form">
                 <select value={inviteUserId} onChange={e => setInviteUserId(e.target.value)} required>
                   <option value="">Select user to invite...</option>
-                  {users.filter(u => !members.find(m => m.id === u.id)).map(u => (
+                  {Array.isArray(users) && Array.isArray(members) && users.filter(u => !members.find(m => m.id === u.id)).map(u => (
                     <option key={u.id} value={u.id}>{u.name}</option>
                   ))}
                 </select>
@@ -256,8 +256,8 @@ function GroupDetails() {
         )}
 
         <h3>Transaction History</h3>
-        {transactions.length === 0 && <p className="empty-state">No transactions yet. Add an expense to get started!</p>}
-        {transactions.map(t => {
+        {(!Array.isArray(transactions) || transactions.length === 0) && <p className="empty-state">No transactions yet. Add an expense to get started!</p>}
+        {Array.isArray(transactions) && transactions.map(t => {
           if (t.type === 'expense') {
             return (
               <Link to={`/expense/${t.id}`} key={`exp-${t.id}`} className="group-card" style={{display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', textDecoration: 'none', color: 'inherit'}}>

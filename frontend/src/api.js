@@ -2,11 +2,13 @@ export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export const fetchUsers = async () => {
   const res = await fetch(`${API_URL}/users`);
+  if (!res.ok) throw new Error(await res.text());
   return res.json();
 };
 
 export const fetchUserGroups = async (userId) => {
   const res = await fetch(`${API_URL}/users/${userId}/groups`);
+  if (!res.ok) throw new Error(await res.text());
   return res.json();
 };
 
@@ -16,6 +18,7 @@ export const createGroup = async (name, creatorId) => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name }),
   });
+  if (!res.ok) throw new Error(await res.text());
   return res.json();
 };
 
@@ -33,6 +36,7 @@ export const createExpense = async (groupId, payload) => {
 
 export const fetchGroupExpenses = async (groupId) => {
   const res = await fetch(`${API_URL}/groups/${groupId}/expenses`);
+  if (!res.ok) throw new Error(await res.text());
   return res.json();
 };
 
@@ -50,11 +54,13 @@ export const createSettlement = async (groupId, payload) => {
 
 export const fetchGroupDebts = async (groupId) => {
   const res = await fetch(`${API_URL}/groups/${groupId}/debts`);
+  if (!res.ok) throw new Error(await res.text());
   return res.json();
 };
 
 export const fetchGroupSettlements = async (groupId) => {
   const res = await fetch(`${API_URL}/groups/${groupId}/settlements`);
+  if (!res.ok) throw new Error(await res.text());
   return res.json();
 };
 
