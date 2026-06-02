@@ -64,7 +64,7 @@ function Navigation() {
           style={{padding: '0.25rem', borderRadius: '4px', border: '1px solid #ddd'}}
         >
           {globalUsers.map(u => (
-            <option key={u.id} value={u.id}>God Mode: Logged in as {u.name}</option>
+            <option key={u.id} value={u.id}>Profile: {u.name}</option>
           ))}
         </select>
         <button onClick={() => { logout(); navigate('/'); }} className="logout-btn">Logout</button>
