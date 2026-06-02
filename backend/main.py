@@ -198,7 +198,7 @@ def get_group_expenses(group_id: int, db: Session = Depends(get_db)):
     expenses = db.query(models.Expense).filter(models.Expense.group_id == group_id).order_by(models.Expense.created_at.desc()).all()
     return expenses
 
-@app.post("/groups/{group_id}/settlements")
+@app.post("/groups/{group_id}/settlements", response_model=schemas.SettlementResponse)
 def create_settlement(group_id: int, settlement: schemas.SettlementCreate, db: Session = Depends(get_db)):
     if settlement.payer_id == settlement.payee_id:
         raise HTTPException(status_code=400, detail="Cannot settle with yourself")
@@ -243,7 +243,8 @@ def create_settlement(group_id: int, settlement: schemas.SettlementCreate, db: S
     payee_balance.balance -= settlement.amount
     
     db.commit()
-    return {"message": "Settlement recorded successfully"}
+    db.refresh(db_settlement)
+    return db_settlement
 
 @app.get("/groups/{group_id}/debts", response_model=List[schemas.DebtInstruction])
 def get_group_debts(group_id: int, db: Session = Depends(get_db)):
